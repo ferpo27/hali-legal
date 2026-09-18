@@ -16,29 +16,27 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 /* ══════════════════════════════════════════════════════════════════════════════
    Paleta tomada de src/theme.ts — la web y el producto son el mismo mundo.
-   Carbón cálido (nunca negro puro), terracota, arena y tinta sepia: el vocabulario
-   de un documento de viaje, que es la metáfora de la marca.
    ══════════════════════════════════════════════════════════════════════════════ */
 :root {
   color-scheme: light dark;
 
   --bg:        #FFFFFF;
   --fg:        #161318;
-  --sub:       #5A3E2B;   /* tinta sepia — 9.7:1 sobre blanco */
+  --sub:       #5A3E2B;
   --ink:       #5A3E2B;
-  --accent:    #C65D3B;   /* terracota: 4.2:1 → solo texto grande y trazos */
-  --accent-txt:#A8482B;   /* terracota oscura: 5.8:1 → links y texto chico  */
+  --accent:    #C65D3B;
+  --accent-txt:#A8482B;
   --sand:      #F3E9DD;
   --card:      #F6F5F3;
   --rule:      rgba(90, 62, 43, 0.20);
   --velo:      rgba(255, 255, 255, 0.82);
 
-  --medida:    38rem;     /* ~66ch: el rango en que se lee sin perder el renglón */
+  --medida:    38rem;
   --nav:       3.5rem;
 }
 
@@ -49,7 +47,7 @@
     --sub:       #E9D9C5;
     --ink:       #E9D9C5;
     --accent:    #E0714B;
-    --accent-txt:#E0714B;   /* 5.7:1 sobre carbón — acá sí sirve para texto */
+    --accent-txt:#E0714B;
     --sand:      #2A2320;
     --card:      #221E27;
     --rule:      rgba(233, 217, 197, 0.24);
@@ -67,23 +65,16 @@ body {
   color: var(--fg);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1.0625rem;
-  line-height: 1.65;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-/* Las superficies que no dibujé también son parte del diseño. */
 ::selection    { background: var(--accent); color: #FFFFFF; }
 :focus-visible { outline: 2px solid var(--accent-txt); outline-offset: 3px; border-radius: 4px; }
 ::-webkit-scrollbar       { width: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 99px; }
 
-/* ── Movimiento ───────────────────────────────────────────────────────────────
-   Responde a lo que hace el visitante; no hay entradas al hacer scroll. Es la
-   distinción de "Designing Fluid Interfaces": el rebote en algo que sólo apareció se
-   siente falso, y el mismo rebote en algo que tocaste se siente físico. Una página que
-   anima cada sección al entrar en pantalla no es fluida, es una presentación.
-
-   El feedback va en :active y no al soltar: esperar el click se lee como muerto. */
 a {
   color: var(--accent-txt);
   text-underline-offset: 0.2em;
@@ -95,318 +86,241 @@ a:hover  { text-decoration-thickness: 2px; }
 a:active { opacity: 0.55; }
 
 .wrap { max-width: var(--medida); margin: 0 auto; padding: 0 1.5rem; }
+/* Las franjas a sangre son la mitad del arreglo: sin ellas la pagina es una sola
+   columna de punta a punta, que es exactamente la forma de un documento. */
+.franja { width: 100%; }
 
-/* ── Barra de navegación ─────────────────────────────────────────────────────── */
+/* ══ MOVIMIENTO LIGADO AL SCROLL ═══════════════════════════════════════════════
+   No son entradas al aparecer. La posicion del scroll ES la linea de tiempo: el
+   texto se resuelve MIENTRAS lo recorres y vuelve atras si subis, que es lo que
+   hace que se sienta ligado al dedo y no disparado por un sensor.
+
+   Y va SOLO en los dos picos de la pagina. Una entrada identica en cada seccion
+   convierte la lectura en una presentacion.                                       */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revelar > * {
+      animation: revelar linear both;
+      animation-timeline: view();
+      animation-range: entry 15% cover 42%;
+    }
+    /* Escalonado por hijo: el segundo llega un poco despues que el primero, como
+       una frase que termina de decirse. */
+    .revelar > *:nth-child(2) { animation-range: entry 22% cover 50%; }
+    .revelar > *:nth-child(3) { animation-range: entry 28% cover 56%; }
+
+    .sello {
+      animation: asentar linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 45%;
+    }
+  }
+}
+
+@keyframes revelar {
+  from { opacity: 0; transform: translateY(1.25rem); filter: blur(6px); }
+  to   { opacity: 1; transform: none;                filter: blur(0); }
+}
+
+/* ══ Barra ════════════════════════════════════════════════════════════════════ */
 
 .barra {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  position: sticky; top: 0; z-index: 10;
   height: var(--nav);
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center;
   background: var(--velo);
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
   border-bottom: 1px solid var(--rule);
 }
+.barra .wrap { display: flex; align-items: center; gap: 0.5rem; width: 100%; }
 
-.barra .wrap { display: flex; align-items: center; gap: 1.25rem; width: 100%; }
-
-/* Los blancos táctiles llegan a 44px, que es el mínimo de la guía de Apple. El relleno
-   se compensa con margen negativo para que el área crezca sin que nada se mueva de
-   lugar: medido antes, la marca daba 31px y los enlaces de navegación 25px. */
 .barra .marca {
   font-family: Fraunces, Georgia, serif;
   font-variation-settings: "opsz" 20, "WONK" 1;
-  font-size: 1.1875rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--fg);
-  text-decoration: none;
-  margin-right: auto;
-  padding: 0.45rem 0.5rem;
-  margin-left: -0.5rem;
+  font-size: 1.1875rem; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--fg); text-decoration: none; margin-right: auto;
+  padding: 0.45rem 0.5rem; margin-left: -0.5rem;
 }
 .barra .marca:hover { text-decoration: none; }
 
-.barra nav { display: flex; gap: 0.75rem; }
+.barra nav { display: flex; gap: 0.25rem; }
 .barra nav a {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--sub);
-  text-decoration: none;
-  /* 25px de texto + 0.6rem arriba y abajo = 44.2px de área. El relleno horizontal
-     reemplaza parte del `gap` para que los blancos no se toquen entre sí. */
-  padding: 0.6rem 0.375rem;
+  font-size: 0.9375rem; font-weight: 500; color: var(--sub);
+  text-decoration: none; padding: 0.6rem 0.5rem;
 }
 .barra nav a:hover { color: var(--accent-txt); }
+@media (max-width: 30rem) { .barra nav a[data-secundario] { display: none; } }
 
-/* En pantallas chicas quedan sólo los dos destinos que alguien busca con urgencia. */
-@media (max-width: 30rem) {
-  .barra nav a[data-secundario] { display: none; }
-}
+/* ══ Apertura ═════════════════════════════════════════════════════════════════ */
 
-/* ── Apertura ────────────────────────────────────────────────────────────────── */
-
-.apertura { padding: 4.5rem 0 3.5rem; }
+.apertura { padding: 5.5rem 0 4rem; }
 
 h1 {
   font-family: Fraunces, Georgia, serif;
   font-variation-settings: "opsz" 144, "WONK" 1;
-  font-size: clamp(2.5rem, 9vw, 4.25rem);
-  font-weight: 400;
-  line-height: 1.02;
-  letter-spacing: -0.035em;
-  margin: 0 0 1.5rem;
+  /* La escala sube: el titulo tenia 68px en escritorio y ahora llega a 96. La
+     diferencia entre "documento" y "sitio" empieza por cuanto se anima el display. */
+  font-size: clamp(2.75rem, 10vw, 6rem);
+  font-weight: 300;
+  line-height: 0.97;
+  letter-spacing: -0.04em;
+  margin: 0 0 1.75rem;
   text-wrap: balance;
 }
-h1 em { font-style: italic; color: var(--accent); }
+h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
 
 .bajada {
-  font-size: 1.1875rem;
-  color: var(--sub);
-  margin: 0;
-  max-width: 30rem;
-  text-wrap: pretty;
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  color: var(--sub); margin: 0; max-width: 32rem;
+  text-wrap: pretty; line-height: 1.5;
 }
 
-/* ── Los datos ───────────────────────────────────────────────────────────────── */
-/*
-   Una fila de hechos, no el template de métrica gigante con etiqueta chica: acá el
-   dato y su explicación pesan lo mismo, porque "13 a 25" no significa nada sin el
-   "años" al lado.
-*/
+/* ══ Datos — cambio de densidad ═══════════════════════════════════════════════ */
 
+.datos-franja { border-block: 1px solid var(--rule); }
 .datos {
   display: grid;
-  /* 7rem y no 8.5: con 8.5rem los cuatro datos pedian 616px y la columna mide 560, asi
-     que "Plataforma" caia sola a una segunda fila y rompia la lectura. Medido, no
-     estimado. Con 7rem entran los cuatro en escritorio y quedan dos por fila en 390. */
   grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
-  gap: 1.25rem 1.5rem;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  padding: 1.5rem 0;
-  margin: 0 0 4rem;
-}
-.datos div  { min-width: 0; }
-.datos dt {
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--sub);
-  font-weight: 600;
-  margin: 0 0 0.25rem;
-}
-.datos dd {
+  gap: 1.5rem;
+  padding: 1.75rem 0;
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 500;
-  line-height: 1.35;
-  text-wrap: pretty;
 }
+.datos div { min-width: 0; }
+.datos dt {
+  font-size: 0.6875rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--sub); font-weight: 600; margin: 0 0 0.375rem;
+}
+.datos dd { margin: 0; font-size: 1.0625rem; font-weight: 500; line-height: 1.35; text-wrap: pretty; }
 
-/* ── Secciones ───────────────────────────────────────────────────────────────── */
+/* ══ Secciones de lectura ═════════════════════════════════════════════════════ */
 
 section { scroll-margin-top: calc(var(--nav) + 1rem); }
 
 h2 {
   font-family: Fraunces, Georgia, serif;
-  font-variation-settings: "opsz" 40, "WONK" 1;
-  font-size: 1.625rem;
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  margin: 0 0 1.25rem;
-  text-wrap: balance;
+  font-variation-settings: "opsz" 48, "WONK" 1;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 400; letter-spacing: -0.025em; line-height: 1.1;
+  margin: 0 0 1.5rem; text-wrap: balance;
 }
 
-.bloque { padding: 0 0 3.5rem; }
-.bloque p { color: var(--sub); margin: 0 0 1rem; }
+.bloque { padding: 4.5rem 0; }
+.bloque p { color: var(--sub); margin: 0 0 1.125rem; }
 .bloque p:last-child { margin-bottom: 0; }
 .bloque strong { color: var(--fg); font-weight: 600; }
 
-/* ── La lista: lo que ganás ──────────────────────────────────────────────────── */
-/*
-   Lista tipográfica con reglas finas, no una grilla de tarjetas: cada línea tiene un
-   peso distinto en el argumento y las tarjetas del mismo tamaño las aplanan todas.
-*/
+/* ══ Lista ════════════════════════════════════════════════════════════════════ */
 
 .ganas ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
-
 .ganas li {
-  border-bottom: 1px solid var(--rule);
-  padding: 1.375rem 0;
-  display: grid;
-  grid-template-columns: 1.875rem 1fr;
-  gap: 0.75rem;
-  align-items: start;
+  border-bottom: 1px solid var(--rule); padding: 1.5rem 0;
+  display: grid; grid-template-columns: 1.875rem 1fr; gap: 0.75rem; align-items: start;
 }
-
-/* 18px con trazo 1.5 se leía como una mota, sobre todo en móvil — visto en captura,
-   no deducido. 20px con trazo 1.75 lo vuelve un signo sin competir con el texto. */
 .ganas svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.34rem;
-  stroke: var(--accent);
-  fill: none;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  width: 1.25rem; height: 1.25rem; margin-top: 0.34rem;
+  stroke: var(--accent); fill: none; stroke-width: 1.75;
+  stroke-linecap: round; stroke-linejoin: round;
 }
-
 .ganas b    { font-weight: 600; color: var(--fg); }
 .ganas span { color: var(--sub); display: block; }
 
-/* ── La evidencia ────────────────────────────────────────────────────────────── */
+/* ══ PICO 1 — la evidencia, a sangre sobre arena ══════════════════════════════ */
 
-.evidencia {
-  background: var(--sand);
-  border-radius: 18px;
-  padding: 2.25rem 1.75rem;
-  margin: 1rem 0 4rem;
-}
+.pico-arena { background: var(--sand); padding: 6rem 0; }
 
-/* Va por clase y no por `.evidencia p`: con el selector de elemento, `.evidencia p`
-   (0,1,1) le ganaba a `.fuente` (0,1,0) y la nota al pie salía en 26px de Fraunces en
-   vez de 14px de Inter — medido, invisible leyendo el código. */
-.evidencia .tesis {
+.pico-arena .tesis {
   font-family: Fraunces, Georgia, serif;
-  font-variation-settings: "opsz" 40, "WONK" 1;
-  font-size: clamp(1.25rem, 4.5vw, 1.625rem);
-  font-weight: 400;
-  line-height: 1.32;
-  letter-spacing: -0.02em;
-  margin: 0 0 1rem;
-  text-wrap: pretty;
+  font-variation-settings: "opsz" 120, "WONK" 1;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 300; line-height: 1.06; letter-spacing: -0.035em;
+  margin: 0 0 2rem; text-wrap: balance;
 }
-.fuente { font-size: 0.875rem; color: var(--sub); margin: 0; line-height: 1.55; }
+.pico-arena .fuente {
+  font-size: 1rem; color: var(--sub); margin: 0; line-height: 1.6; max-width: 30rem;
+}
 
-/* ── Soporte ─────────────────────────────────────────────────────────────────── */
+/* ══ PICO 2 — la misión, a sangre e invertida ═════════════════════════════════
+   Invertir el fondo es el cambio de densidad mas fuerte que tiene la pagina, y va
+   en el unico lugar donde el contenido lo justifica: la razon de ser del producto. */
 
-.soporte { padding: 0 0 3.5rem; }
+.pico-tinta {
+  background: #161318; color: #FFFFFF;
+  padding: 6.5rem 0;
+}
+@media (prefers-color-scheme: dark) { .pico-tinta { background: #0C0A0E; } }
+
+.pico-tinta h2 { color: rgba(255,255,255,0.62); font-size: 0.6875rem; font-family: Inter, sans-serif;
+  letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600; margin: 0 0 1.75rem; }
+
+.pico-tinta blockquote {
+  font-family: Fraunces, Georgia, serif;
+  font-variation-settings: "opsz" 120, "WONK" 1;
+  font-size: clamp(2rem, 6.5vw, 3.75rem);
+  font-weight: 300; line-height: 1.04; letter-spacing: -0.035em;
+  margin: 0 0 2rem; text-wrap: balance;
+}
+.pico-tinta blockquote em { font-style: italic; font-weight: 400; color: #E0714B; }
+.pico-tinta p { color: rgba(255,255,255,0.72); margin: 0; max-width: 30rem; }
+
+/* ══ Soporte ══════════════════════════════════════════════════════════════════ */
 
 .soporte dl { margin: 0; border-top: 1px solid var(--rule); }
-.soporte .via {
-  border-bottom: 1px solid var(--rule);
-  padding: 1.25rem 0;
-}
-.soporte dt {
-  font-weight: 600;
-  color: var(--fg);
-  margin: 0 0 0.25rem;
-  font-size: 1.0625rem;
-}
+.soporte .via { border-bottom: 1px solid var(--rule); padding: 1.375rem 0; }
+.soporte dt { font-weight: 600; color: var(--fg); margin: 0 0 0.25rem; font-size: 1.0625rem; }
 .soporte dd { margin: 0; color: var(--sub); font-size: 0.9375rem; line-height: 1.55; }
 .soporte dd a { font-weight: 500; }
+.plazo { margin: 1.5rem 0 0; font-size: 0.875rem; color: var(--sub); }
 
-.plazo {
-  margin: 1.25rem 0 0;
-  font-size: 0.875rem;
-  color: var(--sub);
-}
+/* ══ Sello ════════════════════════════════════════════════════════════════════ */
 
-/* ── La misión ───────────────────────────────────────────────────────────────── */
-
-.mision blockquote {
-  font-family: Fraunces, Georgia, serif;
-  font-variation-settings: "opsz" 72, "WONK" 1;
-  font-size: clamp(1.5rem, 5.5vw, 2rem);
-  font-weight: 400;
-  line-height: 1.22;
-  letter-spacing: -0.025em;
-  margin: 0 0 1.25rem;
-  text-wrap: pretty;
-}
-.mision blockquote em { font-style: italic; color: var(--accent); }
-
-/* ── El sello ────────────────────────────────────────────────────────────────── */
-
-.sello-fila { display: flex; justify-content: center; padding: 0 0 4rem; }
+.sello-fila { display: flex; justify-content: center; padding: 5rem 0; }
 
 .sello {
-  border: 1.5px dashed var(--ink);
-  border-radius: 12px;
-  color: var(--ink);
-  padding: 1rem 1.5rem;
-  text-align: center;
+  border: 1.5px dashed var(--ink); border-radius: 12px; color: var(--ink);
+  padding: 1.125rem 1.75rem; text-align: center;
   transform: rotate(-3deg);
-  /* `backwards` y NO `both`: con `both` la animación deja fijado el transform del
-     último keyframe, y en la cascada una animación le gana a `:hover` — el gesto
-     quedaba escrito sin hacer nada. Medido: hover daba -3.00° y escala 1.000. */
-  animation: asentar 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
   transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
   cursor: default;
 }
-
-/* Un sello se presiona. El único rebote de la página está en el único elemento que el
-   visitante puede tocar: el overshoot se gana con el gesto, no se regala en la entrada. */
 .sello:hover  { transform: rotate(-1.5deg) scale(1.03); }
 .sello:active { transform: rotate(-3deg) scale(0.97); }
 
 .sello .linea1 {
-  font-family: Fraunces, Georgia, serif;
-  font-variation-settings: "opsz" 40, "WONK" 1;
-  font-size: 1.125rem;
-  display: block;
-  letter-spacing: 0.02em;
+  font-family: Fraunces, Georgia, serif; font-variation-settings: "opsz" 40, "WONK" 1;
+  font-size: 1.25rem; display: block; letter-spacing: 0.02em;
 }
 .sello .linea2 {
-  font-size: 0.6875rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  opacity: 0.75;
-  display: block;
-  margin-top: 0.25rem;
+  font-size: 0.6875rem; letter-spacing: 0.22em; text-transform: uppercase;
+  opacity: 0.75; display: block; margin-top: 0.25rem;
 }
 
 @keyframes asentar {
-  from { transform: rotate(-9deg) scale(1.16); opacity: 0.45; }
+  from { transform: rotate(-9deg) scale(1.14); opacity: 0.4; }
   to   { transform: rotate(-3deg) scale(1);    opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sello { animation: none; transition: none; }
+  .sello { transition: none; }
   .sello:hover, .sello:active { transform: rotate(-3deg); }
   a { transition: none; }
 }
 
-/* ── Pie ─────────────────────────────────────────────────────────────────────── */
+/* ══ Pie ══════════════════════════════════════════════════════════════════════ */
 
-footer {
-  border-top: 1px solid var(--rule);
-  padding: 2.5rem 0 4rem;
-  font-size: 0.9375rem;
-}
+footer { border-top: 1px solid var(--rule); padding: 3rem 0 4rem; font-size: 0.9375rem; }
 
 .columnas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 2rem 1.5rem;
-  margin: 0 0 2.5rem;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 2rem 1.5rem; margin: 0 0 2.5rem;
 }
-
 .columnas h3 {
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--sub);
-  font-weight: 600;
-  margin: 0;
+  font-size: 0.6875rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--sub); font-weight: 600; margin: 0;
 }
 .columnas ul { list-style: none; margin: 0; padding: 0; }
-/* El relleno del enlace ES la separación: los 19px de texto más 0.8rem arriba y abajo
-   dan 44.6px de área táctil, y sin `margin` entre ítems las áreas quedan pegadas pero
-   nunca superpuestas — dos blancos que se pisan son peor que uno chico.
-   El `h3` no lleva margen inferior justamente porque ese espacio ya lo pone el relleno
-   del primer enlace: recortárselo al primero lo dejaba en 38px, medido. */
-.columnas a {
-  font-weight: 500;
-  text-decoration: none;
-  display: block;
-  padding: 0.8rem 0;
-}
+.columnas a { font-weight: 500; text-decoration: none; display: block; padding: 0.8rem 0; }
 .columnas a:hover { text-decoration: underline; }
 
 .cierre { color: var(--sub); font-size: 0.875rem; margin: 0; }
@@ -418,7 +332,7 @@ footer {
   <div class="wrap">
     <a class="marca" href="#top">Hali</a>
     <nav aria-label="Secciones">
-      <a href="#que-es"   data-secundario>Qué es</a>
+      <a href="#que-es" data-secundario>Qué es</a>
       <a href="#seguridad">Seguridad</a>
       <a href="#soporte">Soporte</a>
     </nav>
@@ -426,8 +340,8 @@ footer {
 </header>
 
 <main id="top">
-  <div class="wrap">
 
+  <div class="wrap">
     <section class="apertura">
       <h1>Lo que ganás teniendo un amigo en <em>otro país</em>.</h1>
       <p class="bajada">
@@ -435,26 +349,20 @@ footer {
         El idioma es el pretexto. La amistad es el producto.
       </p>
     </section>
+  </div>
 
-    <dl class="datos">
-      <div>
-        <dt>Para quién</dt>
-        <dd>De 13 a 25 años</dd>
-      </div>
-      <div>
-        <dt>Dónde</dt>
-        <dd>Latinoamérica con España, Italia, Francia, Alemania y Japón</dd>
-      </div>
-      <div>
-        <dt>Cuánto sale</dt>
-        <dd>Gratis</dd>
-      </div>
-      <div>
-        <dt>Plataforma</dt>
-        <dd>Android, en beta cerrada</dd>
-      </div>
-    </dl>
+  <div class="franja datos-franja">
+    <div class="wrap">
+      <dl class="datos">
+        <div><dt>Para quién</dt><dd>De 13 a 25 años</dd></div>
+        <div><dt>Dónde</dt><dd>Latinoamérica con España, Italia, Francia, Alemania y Japón</dd></div>
+        <div><dt>Cuánto sale</dt><dd>Gratis</dd></div>
+        <div><dt>Plataforma</dt><dd>Android, en beta cerrada</dd></div>
+      </dl>
+    </div>
+  </div>
 
+  <div class="wrap">
     <section class="bloque que-es" id="que-es">
       <h2>Qué es Hali</h2>
       <p>
@@ -495,8 +403,10 @@ footer {
         </li>
       </ol>
     </section>
+  </div>
 
-    <section class="evidencia">
+  <div class="franja pico-arena">
+    <div class="wrap revelar">
       <p class="tesis">Un solo amigo del otro lado cambia cómo ves ese país entero.</p>
       <p class="fuente">
         No es una frase de marketing: es el hallazgo de un metaanálisis de
@@ -504,8 +414,10 @@ footer {
         bastante más fuerte que el simple contacto. Y ya no hace falta un avión para
         empezar.
       </p>
-    </section>
+    </div>
+  </div>
 
+  <div class="wrap">
     <section class="bloque" id="seguridad">
       <h2>Cómo cuidamos a los más chicos</h2>
       <p>
@@ -536,25 +448,15 @@ footer {
         </div>
         <div class="via">
           <dt>Alguien te hizo sentir mal, o viste algo grave</dt>
-          <dd>
-            Denuncialo desde la app: es el camino más rápido, porque nos llega con el
-            contexto de la conversación. Si no podés entrar,
-            <a href="mailto:hola@haliworld.com?subject=Seguridad">escribinos con el asunto «Seguridad»</a>.
-          </dd>
+          <dd>Denuncialo desde la app: es el camino más rápido, porque nos llega con el contexto de la conversación. Si no podés entrar, <a href="mailto:hola@haliworld.com?subject=Seguridad">escribinos con el asunto «Seguridad»</a>.</dd>
         </div>
         <div class="via">
           <dt>Sos madre, padre o tutor</dt>
-          <dd>
-            Escribinos y te explicamos qué datos guardamos de tu hijo o hija, cómo
-            funciona la separación por edad y cómo pedir que se borre la cuenta.
-          </dd>
+          <dd>Escribinos y te explicamos qué datos guardamos de tu hijo o hija, cómo funciona la separación por edad y cómo pedir que se borre la cuenta.</dd>
         </div>
         <div class="via">
           <dt>Querés borrar tu cuenta o llevarte tus datos</dt>
-          <dd>
-            Las dos cosas se hacen desde Configuración, sin pedirnos permiso. Si algo
-            falla, escribinos y lo resolvemos nosotros.
-          </dd>
+          <dd>Las dos cosas se hacen desde Configuración, sin pedirnos permiso. Si algo falla, escribinos y lo resolvemos nosotros.</dd>
         </div>
       </dl>
       <p class="plazo">
@@ -562,8 +464,10 @@ footer {
         «Seguridad» se mira primero, siempre.
       </p>
     </section>
+  </div>
 
-    <section class="bloque mision">
+  <div class="franja pico-tinta">
+    <div class="wrap revelar">
       <h2>Por qué existe</h2>
       <blockquote>
         Aprender un idioma no debería ser una materia. Debería ser la consecuencia de
@@ -575,16 +479,16 @@ footer {
         Córdoba tenga un amigo en Osaka, y que dentro de un año los dos vean el mundo
         distinto por eso.
       </p>
-    </section>
-
-    <div class="sello-fila">
-      <div class="sello">
-        <span class="linea1">Hali</span>
-        <span class="linea2">Amistad internacional</span>
-      </div>
     </div>
-
   </div>
+
+  <div class="sello-fila">
+    <div class="sello">
+      <span class="linea1">Hali</span>
+      <span class="linea2">Amistad internacional</span>
+    </div>
+  </div>
+
 </main>
 
 <footer>
