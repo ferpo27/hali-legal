@@ -113,6 +113,9 @@ a:active { opacity: 0.55; }
 
 .barra .wrap { display: flex; align-items: center; gap: 1.25rem; width: 100%; }
 
+/* Los blancos táctiles llegan a 44px, que es el mínimo de la guía de Apple. El relleno
+   se compensa con margen negativo para que el área crezca sin que nada se mueva de
+   lugar: medido antes, la marca daba 31px y los enlaces de navegación 25px. */
 .barra .marca {
   font-family: Fraunces, Georgia, serif;
   font-variation-settings: "opsz" 20, "WONK" 1;
@@ -122,15 +125,20 @@ a:active { opacity: 0.55; }
   color: var(--fg);
   text-decoration: none;
   margin-right: auto;
+  padding: 0.45rem 0.5rem;
+  margin-left: -0.5rem;
 }
 .barra .marca:hover { text-decoration: none; }
 
-.barra nav { display: flex; gap: 1.25rem; }
+.barra nav { display: flex; gap: 0.75rem; }
 .barra nav a {
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--sub);
   text-decoration: none;
+  /* 25px de texto + 0.6rem arriba y abajo = 44.2px de área. El relleno horizontal
+     reemplaza parte del `gap` para que los blancos no se toquen entre sí. */
+  padding: 0.6rem 0.375rem;
 }
 .barra nav a:hover { color: var(--accent-txt); }
 
@@ -388,8 +396,16 @@ footer {
   margin: 0 0 0.75rem;
 }
 .columnas ul { list-style: none; margin: 0; padding: 0; }
-.columnas li + li { margin-top: 0.5rem; }
-.columnas a { font-weight: 500; text-decoration: none; }
+/* El relleno del enlace ES la separación: los 19px de texto mas 0.8rem arriba y abajo
+   dan 44.6px de área táctil, y sin `margin` entre ítems las áreas quedan pegadas pero
+   nunca superpuestas — dos blancos que se pisan son peor que uno chico. */
+.columnas li:first-child a { padding-top: 0; }
+.columnas a {
+  font-weight: 500;
+  text-decoration: none;
+  display: block;
+  padding: 0.8rem 0;
+}
 .columnas a:hover { text-decoration: underline; }
 
 .cierre { color: var(--sub); font-size: 0.875rem; margin: 0; }
