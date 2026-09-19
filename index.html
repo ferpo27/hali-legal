@@ -13,6 +13,39 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://haliworld.com/">
 <meta property="og:locale" content="es_AR">
+<meta property="og:site_name" content="Hali">
+<meta property="og:image" content="https://haliworld.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="canonical" href="https://haliworld.com/">
+
+<!-- El nombre del sitio, declarado. Google lo mostraba como «hali legal» porque indexó
+     el dominio cuando acá vivía sólo la página legal; el título nunca dijo eso. Esto es
+     la señal explícita de cómo se llama el sitio, y lo que queda es pedir el reindexado
+     desde Search Console — sin eso, Google sigue mostrando lo que cacheó. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", "@id": "https://haliworld.com/#sitio",
+      "url": "https://haliworld.com/", "name": "Hali",
+      "alternateName": ["Hali World", "haliworld"],
+      "inLanguage": "es",
+      "publisher": { "@id": "https://haliworld.com/#org" } },
+    { "@type": "Organization", "@id": "https://haliworld.com/#org",
+      "name": "Hali", "url": "https://haliworld.com/",
+      "logo": "https://haliworld.com/og.png",
+      "email": "hola@haliworld.com",
+      "description": "Hali conecta a personas de 13 a 25 años con amigos reales en otros países." }
+  ]
+}
+</script>
+
+<!-- Favicon en línea: el sello de la marca. Sin esto el navegador pide /favicon.ico y
+     come un 404 en cada visita (verificado en la consola). -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C65D3B'/%3E%3Ctext x='16' y='23' font-family='Georgia,serif' font-size='20' fill='%23fff' text-anchor='middle'%3EH%3C/text%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,8 +103,15 @@ body {
   margin: 0; background: var(--bg); color: var(--fg);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1.0625rem; line-height: 1.6;
-  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  /* `clip` y no `hidden`: `overflow-x: hidden` obliga al eje Y a `auto` y convierte al
+     body en un contenedor de scroll, que es la causa clásica de que `position: sticky`
+     deje de pegarse en navegadores móviles. Toda la sección «Cómo funciona» depende de
+     que el teléfono se pegue. `clip` recorta igual sin crear el contenedor; donde no
+     exista, queda `hidden`, que al menos no deja barra horizontal. */
+  overflow-x: hidden;
 }
+@supports (overflow-x: clip) { body { overflow-x: clip; } }
 body.menu-abierto { overflow: hidden; }
 
 ::selection    { background: var(--accent); color: #FFFFFF; }
@@ -89,9 +129,22 @@ a:active { opacity: 0.55; }
 .franja { width: 100%; }
 
 /* ══ MOVIMIENTO ═══════════════════════════════════════════════════════════════
-   Todo va ligado al scroll con `view()`/`scroll()` nativo: la posición del dedo ES
-   la línea de tiempo, así que el movimiento vuelve atrás si subís. No hay entradas
-   disparadas al aparecer, que es lo que hace que una página se sienta automática. */
+   El movimiento AMBIENTE (revelar, el hero que se aleja, el sello que se asienta) va
+   ligado al scroll con `view()` nativo: la posición del dedo ES la línea de tiempo, así
+   que vuelve atrás si subís. Donde no hay soporte no pasa nada y el contenido se lee
+   igual — por eso este bloque puede depender de una función que no todos tienen.
+
+   El cambio de pantallas del teléfono NO va acá, y la razón está medida: con
+   `animation-timeline` el recorrido se veía así —el número es el borde superior del
+   teléfono respecto de la ventana cuando la pantalla llega a opacidad 1—
+
+       escritorio 1366×633   pantalla 2 → visible   ·  pantalla 3 → −178 px (vacío)
+       móvil       390×844   pantalla 2 → −625 px   ·  pantalla 3 → −813 px (fuera)
+
+   Las pantallas cambiaban de verdad, pero fuera de la vista. El pasaporte —que es el
+   remate de la sección— no lo veía nadie. Eso se arregla abajo con la geometría (que
+   el teléfono entre entero y se quede pegado) y el cambio de pantalla pasa a
+   IntersectionObserver, que funciona en todos los navegadores. */
 
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
@@ -102,30 +155,21 @@ a:active { opacity: 0.55; }
     .revelar > *:nth-child(2) { animation-range: entry 22% cover 50%; }
     .revelar > *:nth-child(3) { animation-range: entry 28% cover 56%; }
 
-    /* El teléfono del hero se aleja y se inclina a medida que la página avanza. */
+    /* El teléfono del hero se aleja al salir. Va con `view()` sobre sí mismo y no con
+       `scroll(root) 0 70vh`: en móvil el teléfono está DEBAJO del texto, así que con el
+       rango en pixeles de la página ya nacía a mitad de la animación —encogido y
+       atenuado— antes de que llegaras a verlo. Con `view()` el rango es su propio paso
+       por la ventana, y se comporta igual en las dos anchuras. */
     .hero-tel {
       animation: alejar linear both;
-      animation-timeline: scroll(root); animation-range: 0 70vh;
+      animation-timeline: view(); animation-range: cover 35% cover 100%;
     }
     .sello { animation: asentar linear both; animation-timeline: view(); animation-range: entry 10% cover 45%; }
-
-    /* Cada pantalla la maneja SU PROPIO paso, no un rango sobre el contenedor: con un
-       contenedor más alto que la ventana el rango `contain` no resuelve nunca y las tres
-       pantallas se quedaban en opacidad 0 — el teléfono aparecía vacío. `timeline-scope`
-       expone la línea de tiempo de cada paso a un elemento que no es su descendiente. */
-    .paso-2-activa { animation: pantalla linear both; animation-timeline: --p2; animation-range: cover 30% cover 70%; }
-    .paso-3-activa { animation: pantalla linear both; animation-timeline: --p3; animation-range: cover 30% cover 70%; }
-
-    .paso { animation: atenuar linear both; animation-timeline: view(); animation-range: cover 25% cover 75%; }
   }
 }
 
 @keyframes revelar  { from { opacity: 0; transform: translateY(1.25rem); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
 @keyframes alejar   { to   { transform: translateY(-2.5rem) scale(0.94) rotate(-1.5deg); opacity: 0.86; } }
-/* Empieza y termina invisible, y se muestra en el medio: así la pantalla 2 tapa a la 1
-   mientras leés el paso 2, y la deja ver de nuevo al salir. */
-@keyframes pantalla { 0%, 100% { opacity: 0; } 25%, 75% { opacity: 1; } }
-@keyframes atenuar  { 0%, 100% { opacity: 0.32; } 35%, 65% { opacity: 1; } }
 @keyframes asentar  { from { transform: rotate(-9deg) scale(1.14); opacity: 0.4; } to { transform: rotate(-3deg) scale(1); opacity: 1; } }
 
 /* ══ Barra + menú ═════════════════════════════════════════════════════════════ */
@@ -230,72 +274,84 @@ h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
 
 /* ══ El teléfono ══════════════════════════════════════════════════════════════
    Es una maqueta en CSS, no una foto: escala sin perder nitidez y usa los mismos
-   tokens que la app, así que si el producto cambia de color, esto no miente. */
+   tokens que la app, así que si el producto cambia de color, esto no miente.
+
+   TODO lo de adentro se mide en `cqw` —centésimas del ancho del propio teléfono— y no
+   en rem. Antes eran rem fijos calculados para un teléfono de 304 px, y en cuanto la
+   maqueta se achicó (en la sección pegajosa el alto manda y el ancho sale del
+   aspect-ratio: 198 px en un móvil de 390) el texto seguía midiendo lo mismo: la última
+   burbuja de la conversación quedaba cortada contra el borde de abajo. Con `cqw` la
+   maqueta entra igual a cualquier tamaño, que es lo que este comentario ya prometía.
+
+   La equivalencia es directa: al ancho de diseño de 304 px, 1cqw = 3,04 px. */
 
 .telefono {
   width: min(19rem, 78vw); margin: 0 auto; position: relative;
   aspect-ratio: 9 / 19.2;
   background: var(--bg); border: 9px solid #161318; border-radius: 2.5rem;
   box-shadow: var(--sombra); overflow: hidden;
+  container-type: size;
 }
 @media (prefers-color-scheme: dark) { .telefono { border-color: #38323E; } }
 
 .telefono::before {
-  content: ""; position: absolute; top: 0.5rem; left: 50%; transform: translateX(-50%);
-  width: 4.5rem; height: 1.1rem; background: #161318; border-radius: 999px; z-index: 3;
+  content: ""; position: absolute; top: 2.6cqw; left: 50%; transform: translateX(-50%);
+  width: 23.7cqw; height: 5.8cqw; background: #161318; border-radius: 999px; z-index: 3;
 }
 
-.pantalla { position: absolute; inset: 0; padding: 2.5rem 0.875rem 1rem; display: flex; flex-direction: column; }
+.pantalla { position: absolute; inset: 0; padding: 13.2cqw 4.6cqw 5.3cqw; display: flex; flex-direction: column; }
 .pantalla-apilada { position: absolute; inset: 0; }
 
 .tel-encabezado {
-  display: flex; align-items: center; gap: 0.5rem;
-  padding: 0 0.25rem 0.75rem; border-bottom: 1px solid var(--rule); margin-bottom: 0.875rem;
+  display: flex; align-items: center; gap: 2.6cqw;
+  padding: 0 1.3cqw 3.9cqw; border-bottom: 1px solid var(--rule); margin-bottom: 4.6cqw;
 }
 .tel-avatar {
-  width: 1.875rem; height: 1.875rem; border-radius: 999px; background: var(--sand);
-  display: grid; place-items: center; font-size: 0.75rem; font-weight: 700; color: var(--ink);
+  width: 9.9cqw; height: 9.9cqw; border-radius: 999px; background: var(--sand); flex: none;
+  display: grid; place-items: center; font-size: 3.9cqw; font-weight: 700; color: var(--ink);
 }
-.tel-nombre { font-size: 0.8125rem; font-weight: 600; line-height: 1.2; }
-.tel-estado { font-size: 0.6875rem; color: var(--sub); }
+.tel-nombre { font-size: 4.3cqw; font-weight: 600; line-height: 1.2; }
+.tel-estado { font-size: 3.6cqw; color: var(--sub); }
 
-.burbujas { display: flex; flex-direction: column; gap: 0.4375rem; }
+/* `margin-top: auto` ancla la conversación abajo, como un chat de verdad. Arriba
+   quedaba la mitad del teléfono vacía y se leía como una pantalla a medio cargar. */
+.burbujas { display: flex; flex-direction: column; gap: 2.3cqw; margin-top: auto; }
 .b {
-  max-width: 82%; padding: 0.5rem 0.75rem; font-size: 0.8125rem; line-height: 1.4;
-  border-radius: 16px;
+  max-width: 82%; padding: 2.6cqw 3.9cqw; font-size: 4.3cqw; line-height: 1.4;
+  border-radius: 5.3cqw;
 }
-.b-otro { align-self: flex-start; background: var(--card); color: var(--fg); border-top-left-radius: 8px; }
-.b-mio  { align-self: flex-end;  background: var(--accent); color: var(--on-accent); border-top-right-radius: 8px; }
+.b-otro { align-self: flex-start; background: var(--card); color: var(--fg); border-top-left-radius: 2.6cqw; }
+.b-mio  { align-self: flex-end;  background: var(--accent); color: var(--on-accent); border-top-right-radius: 2.6cqw; }
 
 /* La palabra tocada y su traducción: es la función que más define al producto. */
 .palabra { background: rgba(198,93,59,0.22); border-radius: 4px; padding: 0 2px; }
 .traduccion {
-  align-self: flex-start; margin-top: 0.25rem; background: var(--bg);
-  border: 1px solid var(--rule); border-radius: 12px; padding: 0.5rem 0.625rem;
+  align-self: flex-start; margin-top: 1.3cqw; background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 3.9cqw; padding: 2.6cqw 3.3cqw;
   box-shadow: 0 8px 20px -10px rgba(22,19,24,0.3); max-width: 86%;
 }
-.traduccion b { font-size: 0.8125rem; display: block; }
-.traduccion small { font-size: 0.6875rem; color: var(--sub); }
+.traduccion b { font-size: 4.3cqw; display: block; line-height: 1.3; }
+.traduccion small { font-size: 3.6cqw; color: var(--sub); line-height: 1.35; display: block; }
 
-.tel-sellos { display: flex; flex-wrap: wrap; gap: 0.4375rem; padding: 0.25rem; }
+.tel-sellos { display: flex; flex-wrap: wrap; gap: 2.3cqw; padding: 1.3cqw; }
 .tel-sello {
-  border: 1.5px dashed var(--ink); color: var(--ink); border-radius: 10px;
-  padding: 0.5rem 0.625rem; font-size: 0.6875rem; text-align: center; line-height: 1.25;
+  border: 1.5px dashed var(--ink); color: var(--ink); border-radius: 3.3cqw;
+  padding: 2.6cqw 3.3cqw; font-size: 3.6cqw; text-align: center; line-height: 1.25;
 }
-.tel-sello b { display: block; font-family: Fraunces, Georgia, serif; font-size: 0.8125rem; font-weight: 600; }
+.tel-sello b { display: block; font-family: Fraunces, Georgia, serif; font-size: 4.3cqw; font-weight: 600; }
 
 .tel-tarjeta {
-  border: 1px solid var(--rule); border-radius: 14px; padding: 0.75rem; margin-bottom: 0.5rem;
-  display: flex; gap: 0.625rem; align-items: center;
+  border: 1px solid var(--rule); border-radius: 4.6cqw; padding: 3.9cqw; margin-bottom: 2.6cqw;
+  display: flex; gap: 3.3cqw; align-items: center;
 }
-.tel-tarjeta .tel-avatar { width: 2.25rem; height: 2.25rem; font-size: 0.8125rem; }
+.tel-tarjeta .tel-avatar { width: 11.8cqw; height: 11.8cqw; font-size: 4.3cqw; }
 .tel-tarjeta div { min-width: 0; }
-.tel-tarjeta b { font-size: 0.8125rem; display: block; }
-.tel-tarjeta small { font-size: 0.6875rem; color: var(--sub); }
+.tel-tarjeta b { font-size: 4.3cqw; display: block; }
+.tel-tarjeta small { font-size: 3.6cqw; color: var(--sub); }
 
 .tel-titulo {
-  font-family: Fraunces, Georgia, serif; font-size: 0.9375rem; font-weight: 600;
-  padding: 0 0.25rem 0.625rem;
+  font-family: Fraunces, Georgia, serif; font-size: 4.9cqw; font-weight: 600;
+  padding: 0 1.3cqw 3.3cqw;
 }
 
 /* ══ Datos ════════════════════════════════════════════════════════════════════ */
@@ -308,7 +364,6 @@ h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
 
 /* ══ Sección pegajosa: el teléfono se queda, el texto pasa ════════════════════ */
 
-.pasos { timeline-scope: --p2, --p3; }
 .pasos .ancho { display: grid; grid-template-columns: 1fr; gap: 0; }
 
 /* REGLA QUE NO SE NEGOCIA: la primera pantalla se ve SIEMPRE, sin depender de ninguna
@@ -317,18 +372,32 @@ h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
    dejaba vacío, que es entregar una maqueta de teléfono apagado. */
 /* Fondo propio: sin él las pantallas se transparentan entre sí y los sellos del
    pasaporte quedaban escritos encima de las tarjetas de Descubrir. */
-.pantalla-apilada { opacity: 0; background: var(--bg); }
-.paso-1-activa    { opacity: 1; }
+.pantalla-apilada { opacity: 0; background: var(--bg); transition: opacity 420ms cubic-bezier(0.16,1,0.3,1); }
+.pantalla-apilada.visible { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .pantalla-apilada { transition: none; } }
+
+/* El teléfono se pega y tiene que entrar ENTERO en lo que queda de ventana. La versión
+   anterior medía 649 px de alto contra un hueco de 525, así que la parte de abajo
+   quedaba cortada siempre y el pasaporte —que se dibuja arriba— salía de la vista justo
+   cuando tocaba mostrarlo. Ahora la altura manda y el ancho sale del `aspect-ratio`. */
+.pasos-tel .telefono { width: auto; max-width: 100%; height: 100%; }
 
 @media (min-width: 60rem) {
   .pasos .ancho { grid-template-columns: 0.95fr 1.05fr; gap: 4rem; align-items: start; }
-  .pasos-tel { position: sticky; top: calc(var(--nav) + 3rem); }
+  .pasos-tel {
+    position: sticky; top: var(--nav);
+    height: calc(100svh - var(--nav) - 2rem);
+    display: grid; place-items: center;
+  }
+  /* Cada paso ocupa casi una ventana: es lo que le da al teléfono recorrido pegado
+     suficiente para quedarse mientras se leen los tres, en vez de soltarse en el
+     segundo. Sin esto la columna de texto medía 916 px contra 649 de teléfono — 267 px
+     de pegado para 1.500 de lectura. */
+  .paso { min-height: 74svh; display: flex; flex-direction: column; justify-content: center; }
 }
 
 .pasos-texto { display: flex; flex-direction: column; }
 .paso { padding: 4rem 0; }
-.paso:nth-child(2) { view-timeline-name: --p2; }
-.paso:nth-child(3) { view-timeline-name: --p3; }
 .paso h3 {
   font-family: Fraunces, Georgia, serif; font-variation-settings: "opsz" 48, "WONK" 1;
   font-size: clamp(1.625rem, 3.5vw, 2.125rem); font-weight: 400;
@@ -340,11 +409,28 @@ h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
   color: var(--accent); font-weight: 600; margin: 0 0 0.75rem;
 }
 
-/* En móvil el teléfono va arriba y no se pega: apilar y fijar en una pantalla
-   chica deja al texto sin lugar. */
+/* En móvil el teléfono TAMBIÉN se pega. La versión anterior lo dejaba suelto arriba y
+   el resultado medido fue que las pantallas 2 y 3 se encendían con el teléfono a −625 y
+   −813 px de la ventana: cambiaban de verdad, pero fuera de la vista. El texto pasa por
+   debajo; el degradado del borde evita que una línea quede cortada contra el marco. */
 @media (max-width: 59.99rem) {
-  .pasos-tel { margin-bottom: 1rem; }
-  .paso { padding: 2.5rem 0; }
+  .pasos-tel {
+    position: sticky; top: var(--nav); z-index: 2;
+    height: 50svh; display: grid; place-items: center;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(var(--bg) 88%, transparent);
+  }
+  .paso { min-height: 44svh; display: flex; flex-direction: column; justify-content: center; padding: 1.5rem 0; }
+}
+
+/* El paso que estás leyendo se destaca y los otros se apagan. Sólo con JS presente
+   (`js-pasos`) y sólo donde el teléfono pegado hace evidente que se lee de a uno: en
+   móvil los tres quedan a opacidad plena, porque ahí un texto al 45% es sólo un texto
+   con mal contraste. */
+@media (min-width: 60rem) {
+  .js-pasos .paso { opacity: 0.45; transition: opacity 420ms cubic-bezier(0.16,1,0.3,1); }
+  .js-pasos .paso-activo { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .js-pasos .paso { transition: none; } }
 }
 
 /* ══ Secciones de lectura ═════════════════════════════════════════════════════ */
@@ -507,13 +593,13 @@ footer { border-top: 1px solid var(--rule); padding: 3rem 0 4rem; font-size: 0.9
     <div class="ancho">
       <div class="pasos-tel">
         <div class="telefono" aria-hidden="true">
-          <div class="pantalla pantalla-apilada paso-1-activa">
+          <div class="pantalla pantalla-apilada visible" data-pantalla="1">
             <div class="tel-titulo">Descubrir</div>
             <div class="tel-tarjeta"><div class="tel-avatar">M</div><div><b>Marco · Italia</b><small>Aprende español · fútbol, cocina</small></div></div>
             <div class="tel-tarjeta"><div class="tel-avatar">Y</div><div><b>Yuki · Japón</b><small>Aprende español · anime, cocina</small></div></div>
             <div class="tel-tarjeta"><div class="tel-avatar">C</div><div><b>Clara · Alemania</b><small>Aprende español · música</small></div></div>
           </div>
-          <div class="pantalla pantalla-apilada paso-2-activa">
+          <div class="pantalla pantalla-apilada" data-pantalla="2">
             <div class="tel-encabezado">
               <div class="tel-avatar">Y</div>
               <div><div class="tel-nombre">Yuki</div><div class="tel-estado">Osaka, Japón · en línea</div></div>
@@ -525,7 +611,7 @@ footer { border-top: 1px solid var(--rule); padding: 3rem 0 4rem; font-size: 0.9
               <div class="b b-otro">Que hoy hay lindo día acá</div>
             </div>
           </div>
-          <div class="pantalla pantalla-apilada paso-3-activa">
+          <div class="pantalla pantalla-apilada" data-pantalla="3">
             <div class="tel-titulo">Tu pasaporte</div>
             <div class="tel-sellos">
               <div class="tel-sello"><b>Japón</b>3 meses</div>
@@ -538,17 +624,17 @@ footer { border-top: 1px solid var(--rule); padding: 3rem 0 4rem; font-size: 0.9
       </div>
 
       <div class="pasos-texto">
-        <div class="paso">
+        <div class="paso paso-activo" data-paso="1">
           <p class="paso-num">Primero</p>
           <h3>Encontrás a alguien que también quiere hablar.</h3>
           <p>Buscás por país, por idioma o por lo que a cada uno le gusta. Del otro lado hay una persona real que está buscando lo mismo que vos.</p>
         </div>
-        <div class="paso">
+        <div class="paso" data-paso="2">
           <p class="paso-num">Después</p>
           <h3>Hablás, aunque no sepas todas las palabras.</h3>
           <p>Tocás la que no entendés y te la traduce ahí mismo, sin salir de la conversación. Las que querés recordar se guardan solas y vuelven los días siguientes.</p>
         </div>
-        <div class="paso">
+        <div class="paso" data-paso="3">
           <p class="paso-num">Con el tiempo</p>
           <h3>Tu pasaporte se llena de países.</h3>
           <p>Cada amistad que dura deja su sello. No es un puntaje ni una racha: es el registro de con quién hablaste de verdad, y desde cuándo.</p>
@@ -656,6 +742,63 @@ footer { border-top: 1px solid var(--rule); padding: 3rem 0 4rem; font-size: 0.9
   });
   // Si la ventana crece hasta mostrar los enlaces, el panel deja de tener sentido.
   matchMedia('(min-width: 46rem)').addEventListener('change', function (e) { if (e.matches) cerrar(); });
+})();
+
+// Las pantallas del teléfono. Antes esto lo hacía `animation-timeline` y el cambio
+// ocurría de verdad pero fuera de la ventana (medido: el teléfono a −813 px cuando se
+// encendía el pasaporte). Además dependía de una función que hoy sólo tienen algunos
+// navegadores: en el resto la sección prometía un pasaporte que nadie veía nunca.
+//
+// Ahora lo decide la banda central de la ventana: el paso que la cruza enciende SU
+// pantalla. Sin JS, sin IntersectionObserver o si esto revienta, la pantalla 1 queda
+// encendida por marcado y los tres textos se leen a opacidad plena — la sección sigue
+// mostrando producto, que es la regla que no se negocia.
+(function () {
+  var pantallas = document.querySelectorAll('[data-pantalla]');
+  var pasos     = document.querySelectorAll('[data-paso]');
+  if (!pantallas.length || !pasos.length || !('IntersectionObserver' in window)) return;
+
+  document.documentElement.classList.add('js-pasos');
+
+  function activar(n) {
+    pantallas.forEach(function (p) { p.classList.toggle('visible', p.dataset.pantalla === n); });
+    pasos.forEach(function (p) { p.classList.toggle('paso-activo', p.dataset.paso === n); });
+  }
+
+  // La banda NO puede ser el centro fijo de la ventana. En móvil el teléfono se pega
+  // arriba y ocupa la mitad de alto: el centro geométrico cae DETRÁS del teléfono, así
+  // que se resaltaba un paso mientras el visitante leía el siguiente. La banda se
+  // calcula sobre el espacio que el teléfono deja libre, y por eso se recalcula al
+  // rotar el teléfono o cambiar el tamaño de la ventana.
+  var tel = document.querySelector('.pasos-tel');
+  var observador = null;
+
+  function armar() {
+    if (observador) observador.disconnect();
+    var libre = 0;
+    if (tel) {
+      var cs = getComputedStyle(tel);
+      // Sólo cuando el teléfono queda ENCIMA del texto (apilado), no al lado. Se mide
+      // con el alto y el `top` calculados, no con getBoundingClientRect: el rect depende
+      // de dónde esté el scroll, y esto corre con la sección todavía fuera de la vista.
+      if (cs.position === 'sticky' && tel.offsetWidth > innerWidth * 0.6) {
+        libre = Math.min((parseFloat(cs.top) || 0) + tel.offsetHeight, innerHeight);
+      }
+    }
+    var centro = (libre + innerHeight) / 2;
+    var margen = innerHeight * 0.06;
+    observador = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) { if (e.isIntersecting) activar(e.target.dataset.paso); });
+    }, {
+      rootMargin: -Math.round(centro - margen) + 'px 0px ' + -Math.round(innerHeight - centro - margen) + 'px 0px',
+      threshold: 0,
+    });
+    pasos.forEach(function (p) { observador.observe(p); });
+  }
+
+  armar();
+  var t;
+  addEventListener('resize', function () { clearTimeout(t); t = setTimeout(armar, 200); });
 })();
 </script>
 
